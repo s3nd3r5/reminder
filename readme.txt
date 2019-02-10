@@ -1,5 +1,5 @@
 reminder
-==========
+========
 
 reminder.d is a daemon that monitors the /usr/etc/reminder.d/ dir
 remindme is the CLI used at the user level to manage the contents within the /usr/etc/reminder.d/$USER.list 
@@ -23,7 +23,7 @@ cli
 The user can run commands via the cli to add new reminders, list upcoming reminders, remove, and update reminders
 
 server
-=====
+======
 
 The server exists solely as a file-syncer across users. 
 
