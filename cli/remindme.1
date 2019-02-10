@@ -1,0 +1,52 @@
+.TH REMINDME 1 
+.SH NAME
+ remindme \- Send yourself reminders at a specific time on one or more devices
+.SH SYNOPSIS
+.B remindme
+[\fB\-t\fR \fITIME\fR]
+[\fB\-\-at \fITIME\fR]
+[\fB\-i\fR \fIPERIOD\fR]
+[\fB\-\-in\fR \fIPERIOD\fR]
+.IR message
+.SH DESCRIPTION
+.B remindme\fR queues a message to be sent back to you at a give time or duration.
+.SH OPTIONS
+.TP
+.BR \-t ", " \-\-at =\fITIME\fR
+Sets the time to send the reminder. Time is expected to be in ISO 8601 format. 
+.PP
+.RS
+.B Example: \fI2038-01-19T03:14:07Z\fR
+.RE
+.TP
+.BR \-i ", " \-\-in =\fIPERIOD\fR
+Queues the reminder to be sent after a period of time. 
+Period format is [NUMBER][DHMS]. 
+.PP
+.nf
+.RS
+NUMBER \- Period amount. Must be whole
+D \- in N days
+H \- in N hours
+M \- in N minutes
+S \- in N seconds
+.RE
+.fi
+.SH EXAMPLES
+Remind yourself to take your laptop with you after work.
+.PP
+.RS
+.nf
+$ remindme --at 2038-01-17T17:00:00+01:00 "Take your laptop home!"
+.fi
+.RE
+.PP
+Remind yourself in 30 minutes to check the deployment status.
+.PP
+.RS
+.nf
+$ remindme --in 30M "Check if deployment succeeded."
+.fi
+.RE
+.SH AUTHOR
+Writen by Stephen Enders

@@ -1,8 +1,9 @@
-reminder.d
+reminder
 ==========
 
-Reminder.d is a daemon that monitors the /usr/etc/reminder.d/ dir
-reminder CLI is used at the user level to manage the contents within the /usr/etc/reminder.d/$USER.list 
+reminder.d is a daemon that monitors the /usr/etc/reminder.d/ dir
+remindme is the CLI used at the user level to manage the contents within the /usr/etc/reminder.d/$USER.list 
+reminder-server syncs the reminders across other configured daemons
 
 daemon
 ======
