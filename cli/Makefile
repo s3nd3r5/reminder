@@ -1,5 +1,7 @@
 CC = gcc
 
+install: remindme
+
 remindme: remindme.o
 	$(CC) -o bin/remindme bin/remindme.o
 remindme.o:	remindme.c

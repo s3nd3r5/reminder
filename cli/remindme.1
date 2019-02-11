@@ -8,6 +8,10 @@
 [\fB\-i\fR \fIPERIOD\fR]
 [\fB\-\-in\fR \fIPERIOD\fR]
 .IR message
+.PP
+.B remindme 
+[\fB\-l \fIFLAGS\fR]
+[\fB\-\-list \fIFLAG\fR]
 .SH DESCRIPTION
 .B remindme\fR queues a message to be sent back to you at a give time or duration.
 .SH OPTIONS
@@ -32,6 +36,9 @@ M \- in N minutes
 S \- in N seconds
 .RE
 .fi
+.TP
+.BR \-l ", " \-\-list=\fIFLAG\fR
+Lists your reminders, optionally by flag.
 .SH EXAMPLES
 Remind yourself to take your laptop with you after work.
 .PP
@@ -46,6 +53,18 @@ Remind yourself in 30 minutes to check the deployment status.
 .RS
 .nf
 $ remindme --in 30M "Check if deployment succeeded."
+.fi
+.RE
+.PP
+Print your reminders
+.PP
+.RS
+.nf
+$ remindeme -l
+  n 1029301391 remember to update manpage!
+.PP
+$ remindme --list=m
+  m 1049130139 Don't miss this reminder!
 .fi
 .RE
 .SH AUTHOR

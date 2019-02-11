@@ -1,7 +1,7 @@
 reminder
 ========
 
-reminder.d is a daemon that monitors the /usr/etc/reminder.d/ dir
+reminder.d is a daemon that monitors the /usr/local/etc/reminder.d/ dir
 remindme is the CLI used at the user level to manage the contents within the /usr/etc/reminder.d/$USER.list 
 reminder-server syncs the reminders across other configured daemons
 
@@ -28,7 +28,23 @@ server
 The server exists solely as a file-syncer across users. 
 
 Keys are produced on the users local machines and placed manually on the server. 
-
 These keys are used for authenticating requests between the clients and the servers.
-
 A single key exists per $USER so that key is shared on all of the users machines. 
+
+$USER.list
+==========
+
+Your reminders will exist in the $USER.list file.
+
+The format of this file is [flag] [epochsecond] [reminder]
+  The [epochsecond] will be used to verify if/when the [reminder] should be sent out. 
+  The [flag] will denote the state of the reminder.
+
+
+dev notes
+=========
+
+Create and add user to reminder group
+chown -R :reminder /usr/local/etc/remidner.d
+chmod 770 (or higher) /usr/local/etc/reminder.d
+

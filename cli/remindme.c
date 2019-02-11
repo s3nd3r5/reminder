@@ -3,43 +3,58 @@
 #include <time.h> 
 #include <stdlib.h>
 
+const char* BASE_PATH="/usr/local/etc/reminder.d/";
+
+// CLI FLAGS
 const char* TIME_FLAG = "-t";
 const char* TIME_FLAG_LONG = "--at";
 const char* PERIOD_FLAG = "-i";
 const char* PERIOD_FLAG_LONG = "--in";
-
+const char* LIST_FLAG = "-l";
+const char* LIST_FLAG_LONG = "--list";
+// TIME CONSTS
 const char* DATE_TIME_FORMAT = "%FT%T%z";
-
 const int MIN_SEC = 60; 
-const int HOURS_SEC = MIN_SEC * 60;
-const int DAYS_SEC = HOURS_SEC * 24;
+const int HOURS_SEC = 3600;
+const int DAYS_SEC = 86400;
 
-const char* help = ""
-"    REMINDME\n"
-"      remindme - Send yourself remidners at a specific time on one or more devices\n"
+//REMINDER FLAGS
+const char RFLAG_NEW = 'n';
+
+const char* help = "\n"
+"REMINDME\n"
+"        remindme - Send yourself reminders at a specific time on one or more devices\n"
 "\n"
-"    SYNOPSIS\n"
-"      remindme [-t TIME] [--at TIME] [-i PERIOD] [--in PERIOD] message\n"
+"SYNOPSIS\n"
+"       remindme [-t TIME] [--at TIME] [-i PERIOD] [--in PERIOD] message\n"
+"       remindme [-l FLAGS] [--list FLAG]\n"
 "\n"
-"    OPTIONS\n"
-"      -t, --at=TIME\n"
-"        Sets the time the reminder will be set at.\n"
-"        ISO 8601 Format\n"
+"DESCRIPTION\n"
+"       remindme queues a message to be sent back to you at a give time or duration.\n"
+"\n"
+"OPTIONS\n"
+"       -t, --at=TIME\n"
+"              Sets the time to send the reminder. Time is expected to be in ISO 8601 format.\n"
 "\n"
 "      -i, --in=PERIOD\n"
-"        Queues the reminder to be sent after a period of time.\n"
-"        Period format is [NUMBER][DHSEC]\n"
+"              Queues the reminder to be sent after a period of time.  Period format is [NUMBER][DHMS].\n"
 "\n"
-"        NUMBER - 0-9+\n"
-"        D - in N days\n"
-"        H - in N hours\n"
-"        M - in N minute\n"
-"        S - in N seconds\n"
+"              NUMBER - Period amount. Must be whole\n"
+"              D - in N days\n"
+"              H - in N hours\n"
+"              M - in N minutes\n"
+"              S - in N seconds\n"
 "\n"
-"   EXAMPLES\n"
-"     $ remindme --at \"2038-01-17T17:00:00+01:00\" \"Take your laptop home!\"\n"
-"     $ remindme --in 30M \"Check if the deployment succeeded.\"\n"
-"     $ remindme -i 10S \"Beep!\"\n"
+"       -l, --list=FLAG\n"
+"              Lists your reminders, optionally by flag.\n"
+"\n"
+"EXAMPLES\n"
+"              $ remindme --at 2038-01-17T17:00:00+01:00 \"Take your laptop home!\"\n"
+"              $ remindme --in 30M \"Check if deployment succeeded.\"\n"
+"              $ remindeme -l\n"
+"                n 1029301391 remember to update manpage!\n"
+"              $ remindme --list=m\n"
+"                m 1049130139 Don't miss this reminder!\n"
 "\n";
 
 void print_help()
@@ -52,6 +67,67 @@ struct options {
   char* period;
   char* message;
 };
+
+struct reminder {
+  char* message;
+  time_t time;
+  char flag;
+};
+
+char* get_filepath()
+{
+  char *filepath = (char *)malloc(sizeof(char) * 255);
+  strcpy(filepath, BASE_PATH);
+  strcat(filepath, getenv("USER"));
+  strcat(filepath, ".list\0");
+  return filepath;
+}
+
+int write_reminder(struct reminder* rem)
+{
+  char* filepath = get_filepath();
+  printf("Writing reminder to: %s\n", filepath);
+  FILE* reminder_file;
+  reminder_file = fopen(filepath, "ab+");
+  if (reminder_file != NULL)
+  {
+    fprintf(reminder_file, "%c %lld %s\n", rem->flag, &rem->time, rem->message);
+    fclose(reminder_file);
+    free(filepath);
+    return 0;
+  }
+  else
+  {
+    printf("Unable to write to file: %s", filepath);
+    free(filepath);
+    return 1;
+  }
+}
+
+
+void list(char flag)
+{
+  char* filepath = get_filepath();
+  FILE* reminder_file;
+  reminder_file = fopen(filepath, "r");
+  if (reminder_file != NULL)
+  {
+    char line[255];
+    while(fgets(line, sizeof(line), reminder_file))
+    {
+      if (flag == '\0' || line[0] == flag)
+      {
+        printf("%s", line);
+      }
+    }
+  }
+  else
+  {
+    printf("No reminders :)!");
+  }
+  fclose(reminder_file);
+  free(filepath);
+}
 
 int validate_nonmsg_opts(int sflagc, int lflagc, int argc)
 {
@@ -109,12 +185,13 @@ int main(int argc, char** argv)
   if (argc < 2)
   {
     print_help();
+    return 0;
   }
 
   struct options opts = {};
   int sflagc = 0;
   int lflagc = 0;
-  for (int i = 1; i < argc-1; i++)
+  for (int i = 1; i < argc; i++)
   {
     // check single args
     char* arg = argv[i];
@@ -125,12 +202,28 @@ int main(int argc, char** argv)
       opts.time = argv[i+1];
       ++i;
       ++sflagc;
+      continue;
     }
     else if (strcmp(PERIOD_FLAG, arg) == 0)
     {
       opts.period = argv[i+1];
       ++i;
       ++sflagc;
+      continue;
+    }
+    else if (strcmp(LIST_FLAG, arg) == 0)
+    {
+      if (i+1 < argc)
+      {
+        char* flags = argv[i+1];
+        char flag = flags[0];
+        list(flag);
+      }
+      else
+      {
+        list('\0');
+      }
+      return 0;
     }
     else // long form arguments
     {
@@ -147,13 +240,17 @@ int main(int argc, char** argv)
       {
         opts.time = value;
         ++lflagc;
+        continue;
       }
       else if (strcmp(PERIOD_FLAG_LONG, flag) == 0)
       {
         opts.period = value;
         ++lflagc;
+        continue;
       }
     }
+    
+    opts.message = argv[i];
   }
  
 
@@ -171,13 +268,23 @@ int main(int argc, char** argv)
     return 1;
   }
 
-  opts.message = argv[argc-1];
 
   // convert variables
 
   time_t remind_time = make_time(&opts);  
-  
-  printf("Reminding you \"%s\" at [%d] \"%s\b\"", opts.message, &remind_time, asctime(localtime(&remind_time)));
+ 
+  struct reminder rem = { opts.message, remind_time, RFLAG_NEW };
+
+  int write_err = write_reminder(&rem);
+  if (write_err > 0)
+  {
+    return write_err;
+  }
+
+  char timestr[255];
+  strftime(timestr, sizeof(timestr), DATE_TIME_FORMAT, localtime(&rem.time));
+  printf("Reminding you \"%s\" at [%lld] \"%s\"\n", rem.message, &rem.time, timestr);
 
   return 0;
 }
+
