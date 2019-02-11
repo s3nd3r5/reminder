@@ -19,7 +19,10 @@ const int HOURS_SEC = 3600;
 const int DAYS_SEC = 86400;
 
 //REMINDER FLAGS
-const char RFLAG_NEW = 'n';
+const char RFLAG_NEW = 'n'; // a new notification that has yet to be notified
+const char RFLAG_MISSED = 'm'; // a notification that was unable to be notified
+const char RFLAG_DONE = 'd'; // a notification that was successfully notified
+const char RFLAG_MARK_DEL = 'x'; // markes a reminder to be archived
 
 const char* help = "\n"
 "REMINDME\n"
