@@ -3,26 +3,7 @@
 #include <time.h> 
 #include <stdlib.h>
 
-const char* BASE_PATH="/usr/local/etc/reminder.d/";
-
-// CLI FLAGS
-const char* TIME_FLAG = "-t";
-const char* TIME_FLAG_LONG = "--at";
-const char* PERIOD_FLAG = "-i";
-const char* PERIOD_FLAG_LONG = "--in";
-const char* LIST_FLAG = "-l";
-const char* LIST_FLAG_LONG = "--list";
-// TIME CONSTS
-const char* DATE_TIME_FORMAT = "%FT%T%z";
-const int MIN_SEC = 60; 
-const int HOURS_SEC = 3600;
-const int DAYS_SEC = 86400;
-
-//REMINDER FLAGS
-const char RFLAG_NEW = 'n'; // a new notification that has yet to be notified
-const char RFLAG_MISSED = 'm'; // a notification that was unable to be notified
-const char RFLAG_DONE = 'd'; // a notification that was successfully notified
-const char RFLAG_MARK_DEL = 'x'; // markes a reminder to be archived
+#include "../lib/reminder.h"
 
 const char* help = "\n"
 "REMINDME\n"
@@ -71,21 +52,6 @@ struct options {
   char* message;
 };
 
-struct reminder {
-  char* message;
-  time_t time;
-  char flag;
-};
-
-char* get_filepath()
-{
-  char *filepath = (char *)malloc(sizeof(char) * 255);
-  strcpy(filepath, BASE_PATH);
-  strcat(filepath, getenv("USER"));
-  strcat(filepath, ".list\0");
-  return filepath;
-}
-
 int write_reminder(struct reminder* rem)
 {
   char* filepath = get_filepath();
@@ -94,7 +60,7 @@ int write_reminder(struct reminder* rem)
   reminder_file = fopen(filepath, "ab+");
   if (reminder_file != NULL)
   {
-    fprintf(reminder_file, "%c %lld %s\n", rem->flag, &rem->time, rem->message);
+    fprintf(reminder_file, "%c %lld %s\n", rem->flag, rem->time, rem->message);
     fclose(reminder_file);
     free(filepath);
     return 0;
@@ -174,8 +140,11 @@ time_t make_time(struct options* opt)
   {
     int len = strlen(opt->period);
     char tmtype = opt->period[len-1];
+   
     
-    char* nstr = strtok(opt->period, "DMHSdmhs");
+    char cstr[255];
+    strcpy(cstr, opt->period); // duplicate string for saftey
+    char *nstr = strtok(cstr, "DMHSdmhs"); //tokenize
     int num = atoi(nstr);
     
     int adjust = num * adjusttime(tmtype);
@@ -286,7 +255,7 @@ int main(int argc, char** argv)
 
   char timestr[255];
   strftime(timestr, sizeof(timestr), DATE_TIME_FORMAT, localtime(&rem.time));
-  printf("Reminding you \"%s\" at [%lld] \"%s\"\n", rem.message, &rem.time, timestr);
+  printf("Reminding you \"%s\" at [%lld] \"%s\"\n", rem.message, rem.time, timestr);
 
   return 0;
 }
