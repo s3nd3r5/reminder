@@ -228,7 +228,7 @@ int main(int argc, char** argv)
       }
       return 0;
     }
-    else // long form arguments
+    else if (strcspn(argv[i], "-") == 0) // long form arguments
     {
       if (strcspn(argv[i], "=") == strlen(argv[i])) 
       {
