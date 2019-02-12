@@ -11,7 +11,6 @@ struct remnode
 {
   long fileptr;
   struct reminder* reminder;
-  struct remnode* prev;
   struct remnode* next;
 };
 
@@ -60,14 +59,16 @@ struct remnode * insert_rem(struct remnode * node, struct remnode * head)
     node->next = head;
     return node; // node will be new head
   }
+  struct remnode * prev = NULL;
   struct remnode * curr = head;
   while(curr->next != NULL)
   {
+    prev = curr;
     curr = curr->next;
 
     if (difftime(curr->reminder->time, node->reminder->time) >= 0)
     {
-      curr->prev->next = node;
+      prev->next = node;
       node->next = curr;
       return head; 
     }
@@ -96,6 +97,7 @@ void mark_line(struct remnode * node)
       reminder_file,
       "%c %lld %s", 
       RFLAG_DONE, node->reminder->time, node->reminder->message);
+  fflush(reminder_file);
 }
 
 void int_handler(int code)
@@ -132,11 +134,13 @@ int main(int argc, char* argv[])
         struct remnode* node = make_remnode(pos, line);
         if (head == NULL)
         {
+          printf("insert head: %d %s", length, line);
           head = node;
         }
         else
         {
           insert_rem(node, head);
+          printf("insert node: %d %s", length, line);
         }
        ++length; 
       } 
