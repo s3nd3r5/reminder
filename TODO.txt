@@ -12,4 +12,6 @@ FIXME:
           remnode* next;
       }
     
-    this in theory should work. 
+     this in theory should work. 
+     == THIS IS WIP I've started this but its not fully implemented
+    

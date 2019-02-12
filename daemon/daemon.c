@@ -6,7 +6,66 @@
 
 #include "../lib/reminder.h"
 
-FILE* reminder_file;
+struct remnode
+{
+  long fileptr;
+  struct reminder* reminder;
+  struct remnode* prev;
+  struct remnode* next;
+};
+
+FILE* reminder_file = NULL;
+
+struct reminder * split_line(char* line)
+{
+  char flag = line[0];
+
+  char cline[255];
+  strcpy(cline, line);
+  
+  char* tok;
+  
+  // Two toks to get the [F] [TS] [MSG]
+  strtok(cline, " ");
+  tok = strtok(NULL, " ");
+
+  time_t line_time = atoi(tok);
+  struct reminder *rem = malloc(sizeof(struct reminder));
+  rem->message = cline;
+  rem->time = line_time;
+  rem->flag = flag;
+  return rem;
+}
+
+struct remnode * make_remnode(long pos, char* line)
+{
+  char cline[255];
+  strcpy(cline, line);
+
+  struct reminder* rem = split_line(cline);
+  struct remnode * node = malloc(sizeof(struct remnode));
+  node->fileptr = pos;
+  node->reminder = rem;
+
+  return node; 
+}
+
+// returns the head of the list
+struct remnode * insert_rem(struct remnode * node, struct remnode * head)
+{
+  struct remnode * curr = head;
+  do
+  {
+    if (difftime(curr->reminder->time, curr->reminder->time) >= 0)
+    {
+      node->next = curr;
+      return node;
+    }
+  } while (curr->next != NULL);
+
+  curr->next = node;
+  return head;
+}
 
 void notify(char* line)
 {
@@ -21,25 +80,21 @@ void notify(char* line)
   printf("Hey! %s", tok);
 }
 
-void mark_line(char* line, char flag)
+int do_notify(struct reminder * rem)
 {
-  line[0] = flag;
+  time_t now = time(NULL);
+  return difftime(rem->time, now);
 }
 
-int do_notify(char* line)
+void mark_line(struct remnode * node)
 {
-  char cline[255];
-  strcpy(cline, line);
-  
-  char* tok;
-  
-  // Two toks to get the [F] [TS] [MSG]
-  strtok(cline, " ");
-  tok = strtok(NULL, " ");
-
-  time_t line_time = atoi(tok);
-  time_t now = time(NULL);
-  return difftime(line_time, now);
+  // cleanup all the existing notifications
+  notify(node->reminder->message);
+  fseek(reminder_file, node->fileptr, SEEK_SET);
+  fprintf(
+      reminder_file,
+      "%c %llf %s", 
+      RFLAG_DONE, node->reminder->time, node->reminder->message);
 }
 
 void int_handler(int code)
@@ -57,33 +112,57 @@ int main(int argc, char* argv[])
   
   char* filepath = get_filepath();
   reminder_file = fopen(filepath, "r+");
+ 
+  struct remnode * head;
 
   if (reminder_file != NULL)
   {
     char line[255];
-    for (;;)
+    // scan the file
+    long pos = ftell(reminder_file);
+    while(fgets(line, sizeof(line), reminder_file))
     {
-      // scan the file
-      long pos = ftell(reminder_file);
-      while(fgets(line, sizeof(line), reminder_file))
+      char flag = line[0];
+      if (flag == RFLAG_NEW)
       {
-        char flag = line[0];
-        if (flag == RFLAG_NEW)
+        
+        struct remnode* node = make_remnode(pos, line);
+        if (head == NULL)
         {
-          // check timestamp
-          if (do_notify(line) <= 0)
-          {
-            // cleanup all the existing notifications
-            notify(line);
-            mark_line(line, RFLAG_DONE);
-            fseek(reminder_file, pos, SEEK_SET);
-            fprintf(reminder_file, "%s", line);
-          }
+          head = node;
         }
-        pos = ftell(reminder_file);
+        else
+        {
+          insert_rem(node, head);
+        }
       }
-      fseek(reminder_file, 0, SEEK_SET);
+      pos = ftell(reminder_file);
     }
+    // main daemon loop
+    long tailstart = pos;
+    int loop = 1;
+    do
+    { 
+    
+      struct remnode* curr = head;
+      while(curr != NULL && do_notify(curr->reminder))
+      {
+        mark_line(curr);
+        
+        // capture current in tmp object to free
+        struct remnode* tmp = curr;
+       
+        // move to next
+        curr = curr->next;
+      
+        // free 
+        free(tmp->reminder->message);
+        free(tmp->reminder);
+        free(tmp);
+      }
+      //FIXME - tail file
+    } while(loop);
+
     // close the file and shutdown
     fclose(reminder_file);
   }
@@ -93,6 +172,6 @@ int main(int argc, char* argv[])
     printf("File at path: %s does not exist", filepath);
     return 1;
   }
-
+  printf("quitting");
   return 0;
 }

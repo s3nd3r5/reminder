@@ -21,13 +21,14 @@ const char RFLAG_MISSED = 'm'; // a notification that was unable to be notified
 const char RFLAG_DONE = 'd'; // a notification that was successfully notified
 const char RFLAG_MARK_DEL = 'x'; // markes a reminder to be archived
 
-struct reminder {
+struct reminder 
+{
   char* message;
   time_t time;
   char flag;
 };
 
-// this requires <string.h> <stdlib.h>
+//<string.h> <stdlib.h>
 char* get_filepath()
 {
   char *filepath = (char *)malloc(sizeof(char) * 255);
