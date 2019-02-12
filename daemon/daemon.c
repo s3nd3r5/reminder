@@ -163,15 +163,8 @@ int main(int argc, char* argv[])
         // capture current in tmp object to free
         struct remnode* tmp = head;
         
-        if (head->next == head)
-        {
-          head = NULL;
-        }
-        else
-        {
-          head = head->next;
-        }
-       
+        head = head->next;
+
         // free 
         free(tmp->reminder->message);
         free(tmp->reminder);
