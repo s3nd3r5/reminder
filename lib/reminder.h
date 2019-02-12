@@ -1,4 +1,6 @@
 // Some functions require imports, denoted at the top of each function
+#include <string.h>
+#include <stdlib.h>
 
 const char* BASE_PATH="/usr/local/etc/reminder.d/";
 
@@ -9,6 +11,7 @@ const char* PERIOD_FLAG = "-i";
 const char* PERIOD_FLAG_LONG = "--in";
 const char* LIST_FLAG = "-l";
 const char* LIST_FLAG_LONG = "--list";
+
 // TIME CONSTS
 const char* DATE_TIME_FORMAT = "%FT%T%z";
 const int MIN_SEC = 60; 
