@@ -110,6 +110,32 @@ void int_handler(int code)
   exit(code);
 }
 
+struct remnode * traverse_file(long *pos, struct remnode* head)
+{
+  char line[255];
+  while(fgets(line, sizeof(line), reminder_file))
+  {
+    char flag = line[0];
+    if (flag == RFLAG_NEW)
+    {
+      
+      struct remnode* node = make_remnode(*pos, line);
+      if (head == NULL)
+      {
+        head = node;
+        printf("insert head: %s", line);
+      }
+      else
+      {
+        insert_rem(node, head);
+        printf("insert in list: %s", line);
+      }
+    } 
+    *pos = ftell(reminder_file);
+  }
+  return head;
+}
+
 int main(int argc, char* argv[])
 {
   printf("Starting daemon process\n");
@@ -118,39 +144,16 @@ int main(int argc, char* argv[])
   reminder_file = fopen(filepath, "r+");
   printf("Reading from file: %s\n", filepath);
   struct remnode * head;
-  unsigned int length = 0;
   if (reminder_file != NULL)
   {
-    char line[255];
     // scan the file
     long pos = ftell(reminder_file);
     printf("Queuing up existing reminders\n");
-    while(fgets(line, sizeof(line), reminder_file))
-    {
-      char flag = line[0];
-      if (flag == RFLAG_NEW)
-      {
-        
-        struct remnode* node = make_remnode(pos, line);
-        if (head == NULL)
-        {
-          printf("insert head: %d %s", length, line);
-          head = node;
-        }
-        else
-        {
-          insert_rem(node, head);
-          printf("insert node: %d %s", length, line);
-        }
-       ++length; 
-      } 
-      pos = ftell(reminder_file);
-    }
-    printf("%u reminders queued\n", length); 
+    head = traverse_file(&pos, head);
     // main daemon loop
-    long tailstart = pos;
     int loop = 1;
     printf("Beginnig Daemon Loop\n");  
+
     do
     { 
       if(head != NULL && do_notify(head->reminder))
@@ -159,17 +162,30 @@ int main(int argc, char* argv[])
          
         // capture current in tmp object to free
         struct remnode* tmp = head;
-         
-        // move to next
-        head = head->next;
+        
+        if (head->next == head)
+        {
+          head = NULL;
+        }
+        else
+        {
+          head = head->next;
+        }
+       
         // free 
         free(tmp->reminder->message);
         free(tmp->reminder);
         free(tmp); 
       }
+     
+      // return to where we left off and continue chekc for new reminders 
+      fseek(reminder_file, pos, SEEK_SET);
+    
+      pos = ftell(reminder_file);
+      head = traverse_file(&pos, head);
+      
       printf("sleeping\n");
       sleep(1);
-      //FIXME - tail file
     } while(loop);
     
     // close the file and shutdown
@@ -184,3 +200,4 @@ int main(int argc, char* argv[])
   printf("quitting\n");
   return 0;
 }
+
