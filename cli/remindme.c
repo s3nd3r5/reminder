@@ -18,7 +18,7 @@ const char* help = "\n"
 "\n"
 "OPTIONS\n"
 "       -t, --at=TIME\n"
-"              Sets the time to send the reminder. Time is expected to be in ISO 8601 format.\n"
+"              Sets the time to send the reminder. Time is expected to be in ISO 8601 format in local timezone\n"
 "\n"
 "      -i, --in=PERIOD\n"
 "              Queues the reminder to be sent after a period of time.  Period format is [NUMBER][DHMS].\n"
@@ -33,7 +33,7 @@ const char* help = "\n"
 "              Lists your reminders, optionally by flag.\n"
 "\n"
 "EXAMPLES\n"
-"              $ remindme --at 2038-01-17T17:00:00+01:00 \"Take your laptop home!\"\n"
+"              $ remindme --at 2038-01-17T17:00:00 \"Take your laptop home!\"\n"
 "              $ remindme --in 30M \"Check if deployment succeeded.\"\n"
 "              $ remindeme -l\n"
 "                n 1029301391 remember to update manpage!\n"
@@ -56,8 +56,10 @@ int write_reminder(struct reminder* rem)
 {
   char* filepath = get_filepath();
   printf("Writing reminder to: %s\n", filepath);
+  
   FILE* reminder_file;
   reminder_file = fopen(filepath, "ab+");
+  
   if (reminder_file != NULL)
   {
     fprintf(reminder_file, "%c %lld %s\n", rem->flag, rem->time, rem->message);
@@ -254,7 +256,7 @@ int main(int argc, char** argv)
   }
 
   char timestr[255];
-  strftime(timestr, sizeof(timestr), DATE_TIME_FORMAT, localtime(&rem.time));
+  strftime(timestr, sizeof(timestr), DATE_TIME_FORMAT, gmtime(&rem.time));
   printf("Reminding you \"%s\" at [%lld] \"%s\"\n", rem.message, rem.time, timestr);
 
   return 0;

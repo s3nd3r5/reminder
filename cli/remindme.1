@@ -18,9 +18,10 @@
 .TP
 .BR \-t ", " \-\-at =\fITIME\fR
 Sets the time to send the reminder. Time is expected to be in ISO 8601 format. 
+All dates will be read in your local timezone and converted to UTC. 
 .PP
 .RS
-.B Example: \fI2038-01-19T03:14:07Z\fR
+.B Example: \fI2038-01-19T03:14:07\fR
 .RE
 .TP
 .BR \-i ", " \-\-in =\fIPERIOD\fR
@@ -44,7 +45,7 @@ Remind yourself to take your laptop with you after work.
 .PP
 .RS
 .nf
-$ remindme --at 2038-01-17T17:00:00+01:00 "Take your laptop home!"
+$ remindme --at 2038-01-17T17:00:00 "Take your laptop home!"
 .fi
 .RE
 .PP

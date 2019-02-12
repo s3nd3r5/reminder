@@ -1,0 +1,15 @@
+FIXME:
+
+  - setup post initial scan to filetail or setup some type of internal queue/ds for handling notifications. 
+    current impl opens a file and iterates nonstop over the entire thing. Super inefficent.
+    tailing the file for changes would/should help with the processing time
+    need to account for non marked done times in the file and a way to mark them as done. 
+    
+      struct remnode { 
+          long fileptr;
+          reminder* reminder;
+          remnode* prev;
+          remnode* next;
+      }
+    
+    this in theory should work. 
