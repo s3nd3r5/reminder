@@ -113,6 +113,13 @@ void traverse_file(long *pos, struct remnode** headptr)
   }
 }
 
+void update_head(struct remnode** headptr)
+{
+  struct remnode* head = *headptr;
+  struct remnode* next = head->next;
+  *headptr = next;
+}
+
 void int_handler(int code)
 {
   printf("Daemon interrupted: %d\n", code);
@@ -134,8 +141,7 @@ int main(int argc, char* argv[])
   
   if (reminder_file != NULL)
   {
-    struct remnode * head;
-    struct remnode ** headptr = &head; 
+    struct remnode * head = NULL;
     // init the scan 
     long pos = ftell(reminder_file);
     printf("Queuing up existing reminders\n");
@@ -149,22 +155,22 @@ int main(int argc, char* argv[])
       if(head != NULL && do_notify(head->reminder))
       {
         mark_line(head);
-        printf("line marked\n"); 
-        struct remnode * tmp = head; 
-        *headptr = head->next;
         
+        struct remnode * tmp = head; 
+       
+        update_head(&head);
+
         // free 
         free(tmp->reminder->message);
         free(tmp->reminder);
         free(tmp); 
-        printf("freed\n");
       }
-     
+      
       // return to where we left off and continue chekc for new reminders 
       fseek(reminder_file, pos, SEEK_SET);
     
       pos = ftell(reminder_file);
-      traverse_file(&pos, headptr);
+      traverse_file(&pos, &head);
       
       printf("sleeping\n");
       sleep(1);
