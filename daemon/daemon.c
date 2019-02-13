@@ -113,13 +113,6 @@ void traverse_file(long *pos, struct remnode** headptr)
   }
 }
 
-void update_head(struct remnode** headptr)
-{
-  struct remnode* head = *headptr;
-  struct remnode* next = head->next;
-  *headptr = next;
-}
-
 void int_handler(int code)
 {
   printf("Daemon interrupted: %d\n", code);
@@ -157,9 +150,17 @@ int main(int argc, char* argv[])
         mark_line(head);
         
         struct remnode * tmp = head; 
-       
-        update_head(&head);
-
+        
+        if (head->next)
+        {
+          head = head->next;
+        }
+        else
+        {
+          head = NULL;
+        }
+        
+        
         // free 
         free(tmp->reminder->message);
         free(tmp->reminder);
