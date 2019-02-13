@@ -27,7 +27,7 @@ struct reminder * split_line(char* line)
   char * timestr = strtok(NULL, " ");
   time_t line_time = atoi(timestr);
   
-  char * message = strtok(NULL, "\0"); // Get to EOL
+  char * message = strtok(NULL, "\n\0"); // Get to EOL
   char * cmsg = (char *) malloc(sizeof(char) * 255);
   strcpy(cmsg, message);
 
@@ -58,17 +58,14 @@ void insert_rem(struct remnode * node, struct remnode ** headptr)
   if (curr == NULL)
   {
     *headptr = node;
-    printf("inserting node at current position\n");
   }
   else if (difftime(node->reminder->time, curr->reminder->time) < 0)
   {
     node->next = curr;
     *headptr = node;
-    printf("inserting node as new head\n");
   }
   else
   {
-    printf("moving into list\n");
     insert_rem(node, &curr->next);
   }  
 }
@@ -104,11 +101,9 @@ void traverse_file(long *pos, struct remnode** headptr)
     char flag = line[0];
     if (flag == RFLAG_NEW)
     {
-      printf("found new line\n");
       struct remnode* node = make_remnode(*pos, line);
-      printf("Insertring line: %s", line);
       insert_rem(node, headptr);
-      printf("Line inserted\n");
+      printf("Accepted new reminder: %s", line);
     } 
     *pos = ftell(reminder_file);
   }
@@ -166,7 +161,8 @@ int main(int argc, char* argv[])
       pos = ftell(reminder_file);
       traverse_file(&pos, &head);
       
-      printf("sleeping\n");
+      printf("Waiting...\b\b\b\b\b\b\b\b\b\b");
+      fflush(stdout);
       sleep(1);
     } while(loop);
     
