@@ -11,7 +11,7 @@ const char* help = "\n"
 "\n"
 "SYNOPSIS\n"
 "       remindme [-t TIME] [--at TIME] [-i PERIOD] [--in PERIOD] message\n"
-"       remindme [-l FLAGS] [--list FLAG]\n"
+"       remindme [-l FLAG] [--list FLAG]\n"
 "\n"
 "DESCRIPTION\n"
 "       remindme queues a message to be sent back to you at a give time or duration.\n"
@@ -254,11 +254,9 @@ int main(int argc, char** argv)
   {
     return write_err;
   }
-
-  char timestr[255];
-  strftime(timestr, sizeof(timestr), DATE_TIME_FORMAT, gmtime(&rem.time));
+  char timestr[25];
+  strftime(timestr, sizeof(timestr), DATE_TIME_FORMAT, localtime(&rem.time));
   printf("Reminding you \"%s\" at [%lld] \"%s\"\n", rem.message, rem.time, timestr);
-
   return 0;
 }
 

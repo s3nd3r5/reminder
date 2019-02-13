@@ -1,2 +1,7 @@
 FIXME:
-
+  - what happens if a message is over 255?
+  - what if the file is manually edited?
+  - do we let users cleanup the file?
+  - are notifications cleaned up from memory?
+  - if we have 10 messages all set to trigger at the same time it will take 10seconds to run through them
+      move notify / tree traversal into a method to recurse?

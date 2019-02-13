@@ -1,12 +1,15 @@
 CC = gcc
+CFLAGS = `pkg-config --cflags libnotify`
+FLAGS = -D_XOPEN_SOURCE
+INC = `pkg-config --libs libnotify`
 
 install: daemon
 
 daemon: daemon.o
-	$(CC) -o bin/daemon bin/daemon.o
+	$(CC) $(CFLAGS) -o bin/daemon bin/daemon.o $(INC) 
 
 daemon.o:	daemon.c 
-	$(CC) -o bin/daemon.o -c daemon.c -D_XOPEN_SOURCE
+	$(CC) $(CFLAGS) -o bin/daemon.o -c daemon.c $(FLAGS) $(INC)
 
 clean: 
 	rm bin/daemon*

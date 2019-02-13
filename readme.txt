@@ -12,6 +12,9 @@ The actual daemon is setup with the /usr/etc/reminder.d/$USER.config where the s
 The daemon listens to the $USER.list for any changes and syncs it with the server.
 It also listens to the server for any changes for that $USER and syncs it locally. 
 
+daemon depends on:
+  libnotify-dev
+
 reminders
 =========
 

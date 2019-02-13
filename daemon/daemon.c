@@ -5,7 +5,14 @@
 #include <time.h>
 #include <unistd.h>
 
+#include <libnotify/notify.h>
+#include <libnotify/notification.h>
+
 #include "../lib/reminder.h"
+
+const char* APP_NAME = "reminder-daemon";
+const char* REMINDER_TITLE_BASE = "Reminder";
+FILE* reminder_file;
 
 struct remnode
 {
@@ -14,7 +21,6 @@ struct remnode
   struct remnode* next;
 };
 
-FILE* reminder_file;
 
 struct reminder * split_line(char* line)
 {
@@ -70,9 +76,31 @@ void insert_rem(struct remnode * node, struct remnode ** headptr)
   }  
 }
 
-void notify(char* message)
+void notify(struct reminder* rem)
 {
-  printf("Hey! %s\n", message);
+
+  // make title
+  char title[255];
+  char timestr[25];
+  strftime(timestr, sizeof(timestr), DATE_TIME_FORMAT, localtime(&rem->time));
+
+  strcpy(title, REMINDER_TITLE_BASE);
+  strcat(title, " - ");
+  strcat(title, timestr);
+
+  NotifyNotification *notif = notify_notification_new(title, rem->message, "");
+  notify_notification_set_app_name(notif, APP_NAME);
+  
+  GError* error = NULL;
+  gboolean shown = notify_notification_show(notif, &error);
+  if (shown)
+  {
+    printf("Notified message: %s\n", rem->message);
+  }
+  else
+  {
+    printf("Unable to notify: %s\n", rem->message);
+  }
 }
 
 int do_notify(struct reminder * rem)
@@ -84,7 +112,7 @@ int do_notify(struct reminder * rem)
 void mark_line(struct remnode * node)
 {
   // cleanup all the existing notifications
-  notify(node->reminder->message);
+  notify(node->reminder);
   fseek(reminder_file, node->fileptr, SEEK_SET);
   fprintf(
       reminder_file,
@@ -116,6 +144,10 @@ void int_handler(int code)
   {
     fclose(reminder_file);
   }
+  if (notify_is_initted())
+  {
+    notify_uninit();
+  }
   exit(code);
 }
 
@@ -123,6 +155,14 @@ int main(int argc, char* argv[])
 {
   printf("Starting daemon process\n");
   signal(SIGINT, int_handler);
+  
+  gboolean success = notify_init(APP_NAME);  
+  
+  if (!success)
+  {
+    printf("Unable to initialization notifier\n");
+    exit(1);
+  }
   
   char* filepath = get_filepath();
   reminder_file = fopen(filepath, "r+");
