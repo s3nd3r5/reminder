@@ -51,30 +51,25 @@ struct remnode * make_remnode(long pos, char* line)
 }
 
 // returns the head of the list
-struct remnode * insert_rem(struct remnode * node, struct remnode * head)
+void insert_rem(struct remnode * node, struct remnode ** headptr)
 {
-  // node is new head
-  if (difftime(head->reminder->time, node->reminder->time) >= 0)
+  struct remnode * curr = *headptr;
+  if (curr == NULL)
   {
-    node->next = head;
-    return node; // node will be new head
+    *headptr = node;
+    printf("inserting node at current position\n");
   }
-  struct remnode * prev = NULL;
-  struct remnode * curr = head;
-  while(curr->next != NULL)
+  else if (difftime(node->reminder->time, curr->reminder->time) < 0)
   {
-    prev = curr;
-    curr = curr->next;
-
-    if (difftime(curr->reminder->time, node->reminder->time) >= 0)
-    {
-      prev->next = node;
-      node->next = curr;
-      return head; 
-    }
+    node->next = curr;
+    *headptr = node;
+    printf("inserting node as new head\n");
   }
-  curr->next = node;
-  return head;
+  else
+  {
+    printf("moving into list\n");
+    insert_rem(node, &curr->next);
+  }  
 }
 
 void notify(char* message)
@@ -85,7 +80,7 @@ void notify(char* message)
 int do_notify(struct reminder * rem)
 {
   time_t now = time(NULL);
-  return difftime(rem->time, now);
+  return difftime(rem->time, now) <= 0;
 }
 
 void mark_line(struct remnode * node)
@@ -100,6 +95,24 @@ void mark_line(struct remnode * node)
   fflush(reminder_file);
 }
 
+void traverse_file(long *pos, struct remnode** headptr)
+{
+  char line[255];
+  while(fgets(line, sizeof(line), reminder_file))
+  {
+    char flag = line[0];
+    if (flag == RFLAG_NEW)
+    {
+      printf("found new line\n");
+      struct remnode* node = make_remnode(*pos, line);
+      printf("Insertring line: %s", line);
+      insert_rem(node, headptr);
+      printf("Line inserted\n");
+    } 
+    *pos = ftell(reminder_file);
+  }
+}
+
 void int_handler(int code)
 {
   printf("Daemon interrupted: %d\n", code);
@@ -110,72 +123,48 @@ void int_handler(int code)
   exit(code);
 }
 
-struct remnode * traverse_file(long *pos, struct remnode* head)
-{
-  char line[255];
-  while(fgets(line, sizeof(line), reminder_file))
-  {
-    char flag = line[0];
-    if (flag == RFLAG_NEW)
-    {
-      
-      struct remnode* node = make_remnode(*pos, line);
-      if (head == NULL)
-      {
-        head = node;
-        printf("insert head: %s", line);
-      }
-      else
-      {
-        insert_rem(node, head);
-        printf("insert in list: %s", line);
-      }
-    } 
-    *pos = ftell(reminder_file);
-  }
-  return head;
-}
-
 int main(int argc, char* argv[])
 {
   printf("Starting daemon process\n");
   signal(SIGINT, int_handler);
+  
   char* filepath = get_filepath();
   reminder_file = fopen(filepath, "r+");
   printf("Reading from file: %s\n", filepath);
-  struct remnode * head;
+  
   if (reminder_file != NULL)
   {
-    // scan the file
+    struct remnode * head;
+    struct remnode ** headptr = &head; 
+    // init the scan 
     long pos = ftell(reminder_file);
     printf("Queuing up existing reminders\n");
-    head = traverse_file(&pos, head);
+    traverse_file(&pos, &head); // inital scan of the file
+    
     // main daemon loop
     int loop = 1;
     printf("Beginnig Daemon Loop\n");  
-
     do
-    { 
+    {
       if(head != NULL && do_notify(head->reminder))
       {
         mark_line(head);
-         
-        // capture current in tmp object to free
-        struct remnode* tmp = head;
+        printf("line marked\n"); 
+        struct remnode * tmp = head; 
+        *headptr = head->next;
         
-        head = head->next;
-
         // free 
         free(tmp->reminder->message);
         free(tmp->reminder);
         free(tmp); 
+        printf("freed\n");
       }
      
       // return to where we left off and continue chekc for new reminders 
       fseek(reminder_file, pos, SEEK_SET);
     
       pos = ftell(reminder_file);
-      head = traverse_file(&pos, head);
+      traverse_file(&pos, headptr);
       
       printf("sleeping\n");
       sleep(1);
