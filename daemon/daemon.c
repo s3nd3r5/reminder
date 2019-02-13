@@ -47,6 +47,7 @@ struct remnode * make_remnode(long pos, char* line)
   struct remnode* node = (struct remnode *)malloc(sizeof(struct remnode));
   node->fileptr = pos;
   node->reminder = rem;
+  node->next = NULL;
   return node; 
 }
 
@@ -151,15 +152,7 @@ int main(int argc, char* argv[])
         
         struct remnode * tmp = head; 
         
-        if (head->next)
-        {
-          head = head->next;
-        }
-        else
-        {
-          head = NULL;
-        }
-        
+        head = head->next;
         
         // free 
         free(tmp->reminder->message);
