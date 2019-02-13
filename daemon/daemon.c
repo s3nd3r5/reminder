@@ -27,7 +27,7 @@ struct reminder * split_line(char* line)
   char * timestr = strtok(NULL, " ");
   time_t line_time = atoi(timestr);
   
-  char * message = strtok(NULL, " "); 
+  char * message = strtok(NULL, "\0"); // Get to EOL
   char * cmsg = (char *) malloc(sizeof(char) * 255);
   strcpy(cmsg, message);
 
