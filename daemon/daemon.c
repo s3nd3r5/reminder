@@ -90,7 +90,8 @@ void notify(struct reminder* rem)
 
   NotifyNotification *notif = notify_notification_new(title, rem->message, "");
   notify_notification_set_app_name(notif, APP_NAME);
-  
+  notify_notification_set_timeout(notif, NOTIFY_EXPIRES_NEVER);
+
   GError* error = NULL;
   gboolean shown = notify_notification_show(notif, &error);
   if (shown)
