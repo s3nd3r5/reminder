@@ -3,5 +3,8 @@ FIXME:
   - what if the file is manually edited?
   - do we let users cleanup the file?
   - are notifications cleaned up from memory?
-  - if we have 10 messages all set to trigger at the same time it will take 10seconds to run through them
-      move notify / tree traversal into a method to recurse?
+  - code organization? what should go in the lib?
+  - providing an API?
+  - properly daemonize the daemon?
+  - make notify an API call rather than in the daemon for linking different notification interfaces?
+  - install scripts / configure calls?
