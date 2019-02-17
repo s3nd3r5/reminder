@@ -78,7 +78,6 @@ void insert_rem(struct remnode * node, struct remnode ** headptr)
 
 void notify(struct reminder* rem)
 {
-
   // make title
   char title[255];
   char timestr[25];
@@ -88,7 +87,7 @@ void notify(struct reminder* rem)
   strcat(title, " - ");
   strcat(title, timestr);
 
-  NotifyNotification *notif = notify_notification_new(title, rem->message, "");
+  NotifyNotification *notif = notify_notification_new(title, rem->message, "info");
   notify_notification_set_app_name(notif, APP_NAME);
   notify_notification_set_timeout(notif, NOTIFY_EXPIRES_NEVER);
 
@@ -100,7 +99,7 @@ void notify(struct reminder* rem)
   }
   else
   {
-    printf("Unable to notify: %s\n", rem->message);
+    printf("Unable to notify message: %s\n[%d]\t%s\n", rem->message, error->code, error->message);
   }
 }
 
@@ -182,7 +181,7 @@ int main(int argc, char* argv[])
     printf("Beginnig Daemon Loop\n");  
     do
     {
-      if(head != NULL && do_notify(head->reminder))
+      while(head != NULL && do_notify(head->reminder))
       {
         mark_line(head);
         
