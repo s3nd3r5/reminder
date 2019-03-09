@@ -132,11 +132,14 @@ int adjusttime(char tmtype)
 
 time_t make_time(struct options* opt)
 {
-  struct tm tm;
   if (opt->time)
   {
+    struct tm tm;
+    memset(&tm, 0, sizeof(struct tm));
+    printf("passed in time: %s \n", opt->time);
     strptime(opt->time, DATE_TIME_FORMAT, &tm);
-    return mktime(&tm);
+    printf("%d hour\n", tm.tm_hour);
+    return  mktime(&tm);
   }
   else
   {
