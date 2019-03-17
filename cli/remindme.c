@@ -138,7 +138,6 @@ time_t make_time(struct options* opt)
     memset(&tm, 0, sizeof(struct tm));
     printf("passed in time: %s \n", opt->time);
     strptime(opt->time, DATE_TIME_FORMAT, &tm);
-    printf("%d hour\n", tm.tm_hour);
     return  mktime(&tm);
   }
   else
